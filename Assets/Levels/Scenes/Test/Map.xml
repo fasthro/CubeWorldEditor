@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<map name='Test' area_count='1'>
+<area index='1'>
+	<cube animation_start_id='0|0|0'>
+	<grid bundle_name='' asset_name='Cube_GroundWGrass' pos_x='3' pos_y='0' pos_z='-12' op_x='0' op_y='0' op_z='0' angle_x='0' angle_y='0' angle_z='0' oa_x='0' oa_y='0' oa_z='0'  adjacent_nx='2|0|-12'></grid><grid bundle_name='' asset_name='Cube_GroundWGrass' pos_x='2' pos_y='0' pos_z='-12' op_x='0' op_y='0' op_z='0' angle_x='0' angle_y='0' angle_z='0' oa_x='0' oa_y='0' oa_z='0'  adjacent_px='3|0|-12'></grid>
+	</cube>
+
+	<ornament>
+	
+	</ornament>
+</area>
+</map>

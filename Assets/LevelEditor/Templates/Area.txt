@@ -1,0 +1,9 @@
+<area index='{#area_index}'>
+	<cube animation_start_id='{#animation_start_id}'>
+	{#cube_content}
+	</cube>
+
+	<ornament>
+	{#ornament_content}
+	</ornament>
+</area>
