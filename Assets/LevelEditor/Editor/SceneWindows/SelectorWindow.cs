@@ -25,6 +25,7 @@ namespace LevelEditor
             title = "Selecter Setting";
             w = 180;
             h = 105;
+            windowId =  EUI.GetWindowId();
 
             m_selectorTools = LevelEditorWindow.Inst.sceneWindow.selectorTools;
             if (m_selectorTools.selectGrid != null)
@@ -41,7 +42,7 @@ namespace LevelEditor
 
             x = sceneView.position.width - w - 2;
             y = sceneView.position.height - h - 5;
-            GUI.Window(1, new Rect(x, y, w, h), OnGUI, title);
+            GUI.Window(windowId, new Rect(x, y, w, h), OnGUI, title);
         }
 
         protected override void OnGUI(int id)
@@ -60,7 +61,7 @@ namespace LevelEditor
             m_selectorTools.selectGrid.positionOffset = m_positionOffset;
             m_selectorTools.selectGrid.angleOffset = m_angleOffset;
             
-            gridTransform.position = m_selectorTools.selectGrid.position + SettingManager.Inst.Setting.CubeAnchorOffset + m_positionOffset;
+            gridTransform.position = m_selectorTools.selectGrid.position + SettingManager.Inst.Setting.cubeAnchorOffset + m_positionOffset;
             gridTransform.localEulerAngles = m_selectorTools.selectGrid.angleOffset + m_angleOffset;
         }
     }

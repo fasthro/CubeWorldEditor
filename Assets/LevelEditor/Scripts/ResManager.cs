@@ -37,7 +37,7 @@ namespace LevelEditor
         {
             // 所有资源
             m_resObjects.Clear();
-            string[] files = Directory.GetFiles(SettingManager.Inst.Setting.ArtPath, "*.prefab", SearchOption.AllDirectories);
+            string[] files = Directory.GetFiles(SettingManager.Inst.Setting.artPath, "*.prefab", SearchOption.AllDirectories);
             for (int i = 0; i < files.Length; i++)
             {
                 var id = Utils.MDToStr(Utils.ReplaceSeparator(files[i]));
@@ -48,7 +48,7 @@ namespace LevelEditor
             // 资源分组
             m_groups.Clear();
 
-            string[] dirs = Directory.GetDirectories(SettingManager.Inst.Setting.ArtPath, "*", SearchOption.TopDirectoryOnly);
+            string[] dirs = Directory.GetDirectories(SettingManager.Inst.Setting.artPath, "*", SearchOption.TopDirectoryOnly);
             for (int i = 0; i < dirs.Length; i++)
             {
                 var id = Utils.MDToStr(Utils.ReplaceSeparator(dirs[i]));
@@ -59,7 +59,7 @@ namespace LevelEditor
 
         public ResGroup GetResGroupByName(string groupName)
         {
-            string id = Utils.MDToStr(Utils.ReplaceSeparator(SettingManager.Inst.Setting.ArtPath + groupName));
+            string id = Utils.MDToStr(Utils.ReplaceSeparator(SettingManager.Inst.Setting.artPath + groupName));
             ResGroup group = null;
             if (m_groups.TryGetValue(id, out group))
             {
@@ -224,7 +224,7 @@ namespace LevelEditor
 
         private MaterialType GetMaterialType()
         {
-            var path = m_relativePath.Substring(SettingManager.Inst.Setting.ArtPath.Length, m_relativePath.Length - SettingManager.Inst.Setting.ArtPath.Length);
+            var path = m_relativePath.Substring(SettingManager.Inst.Setting.artPath.Length, m_relativePath.Length - SettingManager.Inst.Setting.artPath.Length);
             var mName = Utils.GetPathSection(path, 1);
             FieldInfo[] fields = typeof(MaterialType).GetFields();
             for (int i = 0; i < fields.Length; i++)

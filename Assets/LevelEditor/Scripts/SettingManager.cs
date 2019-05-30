@@ -23,14 +23,6 @@ namespace LevelEditor
             }
         }
 
-        // 场景工具初始 x,y 位置
-        public static int SceneTooIX = 10;
-        public static int SceneTooIY = 10;
-        // 场景工具 间隔
-        public static int SceneTooIInterval = 5;
-        // 场景工具尺寸
-        public static int SceneToolSize = 40;
-
         // 设置 STO
         public SettingSTO Setting;
 

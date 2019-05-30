@@ -139,10 +139,10 @@ namespace LevelEditor
         /// <returns></returns>
         public static string GetLevelSceneDirectory(string levelSceneName, bool absolute = true)
         {
-            var directory = Path.Combine(SettingManager.Inst.Setting.LevelSceneSavePath, levelSceneName);
+            var directory = Path.Combine(SettingManager.Inst.Setting.levelSceneSavePath, levelSceneName);
             if (absolute)
                 return Path.Combine(Application.dataPath, directory);
-            return Path.Combine(SettingManager.Inst.Setting.LevelSceneSavePath, levelSceneName);
+            return Path.Combine(SettingManager.Inst.Setting.levelSceneSavePath, levelSceneName);
         }
 
         /// <summary>
@@ -200,6 +200,41 @@ namespace LevelEditor
             } catch (Exception ex) {
                 throw new Exception("md5file() fail, error:" + ex.Message);
             }
+        }
+
+        /// <summary>
+        /// SceneView 截图
+        /// </summary>
+        public static void CaptureScreenShot(string saveFilePath, bool openFinder)
+        {
+            var w = SettingManager.Inst.Setting.screenshotWidth * SettingManager.Inst.Setting.supersizeResolution;
+            var h = SettingManager.Inst.Setting.screenshotHeight * SettingManager.Inst.Setting.supersizeResolution;
+
+            var renderTexture = new RenderTexture(w, h, 24);
+            var mCamera = SceneView.lastActiveSceneView.camera;
+
+            mCamera.targetTexture = renderTexture;
+            mCamera.Render();
+
+            RenderTexture.active = renderTexture;
+
+            var screenShot = new Texture2D(w, h, TextureFormat.RGB24, false);
+            screenShot.ReadPixels(new Rect(0, 0, w, h), 0, 0);
+            screenShot.Apply();
+
+            mCamera.targetTexture = null;
+            RenderTexture.active = null;
+
+            var dirPath = Path.GetDirectoryName(saveFilePath);
+            if (!Directory.Exists(dirPath))
+            {
+                Directory.CreateDirectory(dirPath);
+            }
+
+            var bytes = screenShot.EncodeToPNG();
+            File.WriteAllBytes(saveFilePath, bytes);
+
+            if (openFinder) EditorUtility.RevealInFinder(Application.dataPath + "/../" + saveFilePath);
         }
     }
 }

@@ -13,13 +13,25 @@ namespace LevelEditor
     public class SettingSTO : ScriptableObject
     {
         [Header("关卡场景保存路径")]
-        public string ArtPath = "Assets/Art/Levels/Prefabs/";
+        public string artPath = "Assets/Art/Levels/Prefabs/";
 
         [Header("关卡场景保存路径")]
-        public string LevelSceneSavePath = "Levels/Scenes/";
+        public string levelSceneSavePath = "Levels/Scenes/";
 
         [Header("cube offset")]
-        public Vector3 CubeAnchorOffset = new Vector3(0, -0.5f, 0);
+        public Vector3 cubeAnchorOffset = new Vector3(0, -0.5f, 0);
+
+        [Header("场景工具Icon尺寸")]
+        public int sceneToolsIconSize = 40;
+
+        [Header("屏幕截图尺寸宽")]
+        public int screenshotWidth = 1920;
+        [Header("屏幕截图尺寸高")]
+        public int screenshotHeight = 1080;
+        [Header("屏幕截图分辨率")]
+        public int supersizeResolution = 1;
+        [Header("屏幕截图默认打开文件夹")]
+        public bool screenshotOpenFinder = true;
     }
 
 }

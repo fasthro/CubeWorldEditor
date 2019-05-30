@@ -17,6 +17,7 @@ namespace LevelEditor
         protected float w;
         protected float h;
         protected bool isShow;
+        protected int windowId;
 
         public void Initialize()
         {

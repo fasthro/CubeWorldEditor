@@ -37,7 +37,7 @@ namespace LevelEditor
 
         protected override void OnInitialize()
         {
-            m_anchorOffset = SettingManager.Inst.Setting.CubeAnchorOffset;
+            m_anchorOffset = SettingManager.Inst.Setting.cubeAnchorOffset;
         }
 
         public void Bind(ResObject resObject)

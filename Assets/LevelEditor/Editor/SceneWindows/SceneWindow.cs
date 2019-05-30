@@ -3,6 +3,7 @@
  * @Date: 2019-05-28 12:03:31
  * @Description: 场景主窗口界面
  */
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
@@ -50,12 +51,26 @@ namespace LevelEditor
         // 切换工具事件
         public SwitchToolsEvent switchToolsEventHandler;
 
-        // content
-        private GUIContent m_content;
+        private readonly int m_toolsCount = 4;
+        private readonly int m_operationCount = 5;
+
+        // scene view 视角
+        private int m_sceneViewQuaIndex = 0;
+        private Quaternion[] m_sceneViewQuas = new Quaternion[] {
+            Quaternion.LookRotation(Vector3.down),
+            Quaternion.LookRotation(Vector3.left),
+            Quaternion.LookRotation(Vector3.right),
+            new Quaternion(0.35f, 0, 0, 1)};
+
         // rect
         private Rect m_rect;
         // controlId
         private int m_controlId;
+        private GUILayoutOption m_layoutWidth;
+        private GUILayoutOption m_layoutHeight;
+        // window id
+        private int m_toolsWindowId;
+        private int m_operationWindowId;
 
         protected override void OnInitialize()
         {
@@ -87,6 +102,17 @@ namespace LevelEditor
             // 注册场景事件
             m_templateGrid.SceneRenderHandler -= OnSceneRender;
             m_templateGrid.SceneRenderHandler += OnSceneRender;
+
+            // window id
+            m_toolsWindowId = EUI.GetWindowId();
+            m_operationWindowId = EUI.GetWindowId();
+
+            // GUILayoutOption
+            m_layoutWidth = GUILayout.Width(SettingManager.Inst.Setting.sceneToolsIconSize);
+            m_layoutHeight = GUILayout.Height(SettingManager.Inst.Setting.sceneToolsIconSize);
+
+            // 场景视角设置
+            m_sceneViewQuaIndex = 0;
         }
 
         protected override void OnShowWindow()
@@ -98,6 +124,9 @@ namespace LevelEditor
 
             // 重置工具
             SwitchTools(SceneToolsType.None);
+
+            // 场景视角设置
+            SceneView.lastActiveSceneView.LookAt(Vector3.zero, m_sceneViewQuas[m_sceneViewQuaIndex]);
         }
 
         protected override void OnCloseWindow()
@@ -168,89 +197,72 @@ namespace LevelEditor
 
             GUI.skin = EditorGUIUtility.GetBuiltinSkin(EditorSkin.Scene);
 
-            int nextInterval = SettingManager.SceneToolSize + SettingManager.SceneTooIInterval;
-            float rightX = sceneView.position.width - SettingManager.SceneToolSize - 5;
-            float downY = sceneView.position.height - SettingManager.SceneToolSize - 25;
-
-            #region  左测
-
-            // 选择工具
-            m_content = new GUIContent(ResManager.Inst.GetIconTexture("iconCursor"));
-            m_rect = new Rect(SettingManager.SceneTooIX, SettingManager.SceneTooIY, SettingManager.SceneToolSize, SettingManager.SceneToolSize);
-            if (GUI.Toggle(m_rect, m_sceneToolType == SceneToolsType.Selector, m_content, GUI.skin.button)) SwitchTools(SceneToolsType.Selector);
-
-            // 笔刷工具
-            m_content = new GUIContent(ResManager.Inst.GetIconTexture("iconBlockMode"));
-            m_rect = new Rect(SettingManager.SceneTooIX, SettingManager.SceneTooIY + nextInterval, SettingManager.SceneToolSize, SettingManager.SceneToolSize);
-            if (GUI.Toggle(m_rect, m_sceneToolType == SceneToolsType.Brush, m_content, GUI.skin.button)) SwitchTools(SceneToolsType.Brush);
-
-            // 吸管工具
-            m_content = new GUIContent(ResManager.Inst.GetIconTexture("iconPicker"));
-            m_rect = new Rect(SettingManager.SceneTooIX, SettingManager.SceneTooIY + nextInterval * 2, SettingManager.SceneToolSize, SettingManager.SceneToolSize);
-            if (GUI.Toggle(m_rect, m_sceneToolType == SceneToolsType.Sucker, m_content, GUI.skin.button)) SwitchTools(SceneToolsType.Sucker);
-
-            // 擦除工具
-            m_content = new GUIContent(ResManager.Inst.GetIconTexture("iconErase"));
-            m_rect = new Rect(SettingManager.SceneTooIX, SettingManager.SceneTooIY + nextInterval * 3, SettingManager.SceneToolSize, SettingManager.SceneToolSize);
-            if (GUI.Toggle(m_rect, m_sceneToolType == SceneToolsType.Erase, m_content, GUI.skin.button)) SwitchTools(SceneToolsType.Erase);
-
-            #endregion
-
-            #region 底部
-            // Template Grid 背景
-            m_content = new GUIContent(ResManager.Inst.GetIconTexture("iconIsolate"));
-            m_rect = new Rect(SettingManager.SceneTooIX, downY, SettingManager.SceneToolSize, SettingManager.SceneToolSize);
-            templateGrid.transparentEnabled = GUI.Toggle(m_rect, templateGrid.transparentEnabled, m_content, GUI.skin.button);
-
-            // Template Grid 高度
-            m_content = new GUIContent(ResManager.Inst.GetIconTexture("iconGridUp"));
-            m_rect = new Rect(SettingManager.SceneTooIX + nextInterval, downY, SettingManager.SceneToolSize, SettingManager.SceneToolSize);
-            if (GUI.Toggle(m_rect, false, m_content, GUI.skin.button))
-            {
-                m_sceneToolType = SceneToolsType.None;
-                templateGrid.height++;
-                LevelEditorWindow.Inst.Repaint();
-            }
-
-            // GizmoPanelDown
-            m_content = new GUIContent(ResManager.Inst.GetIconTexture("iconGridDown"));
-            m_rect = new Rect(SettingManager.SceneTooIX + nextInterval * 2, downY, SettingManager.SceneToolSize, SettingManager.SceneToolSize);
-            if (GUI.Toggle(m_rect, false, m_content, GUI.skin.button))
-            {
-                m_sceneToolType = SceneToolsType.None;
-                templateGrid.height--;
-                LevelEditorWindow.Inst.Repaint();
-            }
-
-            // 上一区域
-            m_content = new GUIContent(ResManager.Inst.GetIconTexture("iconArrowUp"));
-            m_rect = new Rect(SettingManager.SceneTooIX + nextInterval * 3, downY, SettingManager.SceneToolSize, SettingManager.SceneToolSize / 2);
-            if (GUI.Button(m_rect, m_content))
-            {
-                LevelEditorWindow.Inst.area++;
-            }
-
-            // 下一区域
-            m_content = new GUIContent(ResManager.Inst.GetIconTexture("iconArrowDown"));
-            m_rect = new Rect(SettingManager.SceneTooIX + nextInterval * 3, downY + SettingManager.SceneToolSize / 2, SettingManager.SceneToolSize, SettingManager.SceneToolSize / 2);
-            if (GUI.Button(m_rect, m_content))
-            {
-                LevelEditorWindow.Inst.area--;
-            }
-            m_rect = new Rect(SettingManager.SceneTooIX + +nextInterval * 4, downY, 50, SettingManager.SceneToolSize);
-            GUILayout.BeginArea(m_rect, EditorStyles.textArea);
-            {
-                GUILayout.BeginVertical();
-                GUILayout.Label("Area", EditorStyles.label, GUILayout.Width(50));
-                GUILayout.Label(LevelEditorWindow.Inst.area.ToString(), EditorStyles.label, GUILayout.Width(50));
-                GUILayout.EndVertical();
-            }
-            GUILayout.EndArea();
-            #endregion
+            GUI.Window(m_toolsWindowId, new Rect(0, 18, SettingManager.Inst.Setting.sceneToolsIconSize + 15, 25 + 5 * (m_toolsCount - 1) + SettingManager.Inst.Setting.sceneToolsIconSize * m_toolsCount), OnToolsGUI, "");
+            GUI.Window(m_operationWindowId, new Rect(0, sceneView.position.height - 70, 11 + 5 * (m_operationCount - 1) + SettingManager.Inst.Setting.sceneToolsIconSize * m_operationCount, SettingManager.Inst.Setting.sceneToolsIconSize + 25), OnOperationGUI, "");
 
             Handles.EndGUI();
 
             HandleUtility.AddDefaultControl(m_controlId);
+        }
+
+        private void OnToolsGUI(int id)
+        {
+            using (new VerticalCenteredScope())
+            {
+                // 选择工具
+                if (GUILayout.Toggle(m_sceneToolType == SceneToolsType.Selector, EUI.GetTextureContent("iconCursor"), GUI.skin.button, m_layoutHeight, m_layoutWidth))
+                    SwitchTools(SceneToolsType.Selector);
+                // 笔刷工具
+                if (GUILayout.Toggle(m_sceneToolType == SceneToolsType.Brush, EUI.GetTextureContent("iconBlockMode"), GUI.skin.button, m_layoutHeight, m_layoutWidth))
+                    SwitchTools(SceneToolsType.Brush);
+                // 吸管工具
+                if (GUILayout.Toggle(m_sceneToolType == SceneToolsType.Sucker, EUI.GetTextureContent("iconPicker"), GUI.skin.button, m_layoutHeight, m_layoutWidth))
+                    SwitchTools(SceneToolsType.Sucker);
+                // 擦除工具
+                if (GUILayout.Toggle(m_sceneToolType == SceneToolsType.Erase, EUI.GetTextureContent("iconErase"), GUI.skin.button, m_layoutHeight, m_layoutWidth))
+                    SwitchTools(SceneToolsType.Erase);
+            }
+        }
+
+        private void OnOperationGUI(int id)
+        {
+            using (new HorizontalCenteredScope())
+            {
+                // Template Grid 背景
+                templateGrid.transparentEnabled = GUILayout.Toggle(templateGrid.transparentEnabled, EUI.GetTextureContent("iconIsolate"), GUI.skin.button, m_layoutHeight, m_layoutWidth);
+
+                // Template Grid 高度
+                if (GUILayout.Toggle(false, EUI.GetTextureContent("iconGridUp"), GUI.skin.button, m_layoutHeight, m_layoutWidth))
+                {
+                    m_sceneToolType = SceneToolsType.None;
+                    templateGrid.height++;
+                    LevelEditorWindow.Inst.Repaint();
+                }
+
+                // GizmoPanelDown
+                if (GUILayout.Toggle(false, EUI.GetTextureContent("iconGridDown"), GUI.skin.button, m_layoutHeight, m_layoutWidth))
+                {
+                    m_sceneToolType = SceneToolsType.None;
+                    templateGrid.height--;
+                    LevelEditorWindow.Inst.Repaint();
+                }
+
+                // camera view
+                if (GUILayout.Button(EUI.GetTextureContent("iconEye"), GUI.skin.button, m_layoutHeight, m_layoutWidth))
+                {
+                    m_sceneViewQuaIndex++;
+                    if (m_sceneViewQuaIndex >= m_sceneViewQuas.Length)
+                        m_sceneViewQuaIndex = 0;
+                    SceneView.lastActiveSceneView.LookAt(Vector3.zero, m_sceneViewQuas[m_sceneViewQuaIndex]);
+                }
+
+                // 截图
+                if (GUILayout.Button(EUI.GetTextureContent("iconCapture"), GUI.skin.button, m_layoutHeight, m_layoutWidth))
+                {
+                    var path = Utils.GetPathToAssets(Utils.GetLevelSceneDirectory(Environment.Inst.levelName, false)) + "/ScreenShot/" + DateTime.Now.ToString("yyyyMMddHHmmss") + ".png";
+                    Utils.CaptureScreenShot(path, SettingManager.Inst.Setting.screenshotOpenFinder);
+                }
+            }
         }
 
         private void OnSceneRender(SceneView sceneView, SceneRenderState state, Vector3 mousePosition)
