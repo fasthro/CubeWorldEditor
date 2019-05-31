@@ -1,2 +1,2 @@
-# LevelEditor
-Cube 关卡编辑器.
+# Cube World Editor
+Cube World 关卡编辑器.
