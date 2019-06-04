@@ -73,6 +73,11 @@ namespace CubeWorldEditor
         private void Initialize()
         {
             if (Inst == null) OpenCubeWorldEditorWindow();
+
+            // 层初始化
+            var layer = typeof(TemplateGrid).Name;
+            if (!TagOperation.IsHasLayer(layer)) TagOperation.AddLayer(layer);
+            
             // 关卡
             Environment.Inst.Initialize();
 
