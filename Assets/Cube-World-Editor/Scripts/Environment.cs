@@ -81,7 +81,7 @@ namespace CubeWorldEditor
             grid.angleOffset = brushGrid.angleOffset;
             grid.materialType = resObject.materialType;
             grid.Initialize();
-            
+
             var addSucceed = AddGrid(brushGrid.position, areaIndex, grid);
             if (!addSucceed)
             {
@@ -169,6 +169,26 @@ namespace CubeWorldEditor
                 area.RemoveGrid(key);
             }
         }
+
+        /// <summary>
+        /// 获取最大区域索引
+        /// </summary>
+        public int GetMaxAreaIndex()
+        {
+            return areas.Count;
+        }
+
+        /// <summary>
+        /// 添加区域
+        /// </summary>
+        public void AddArea()
+        {
+            int nk = GetMaxAreaIndex() + 1;
+            if (!areas.ContainsKey(nk))
+            {
+                CreateArea(nk);
+            }
+        }
         #endregion
 
         #region  scene data
@@ -217,15 +237,7 @@ namespace CubeWorldEditor
             // 创建区域节点
             if (areaTransform == null)
             {
-                GameObject areaGo = new GameObject();
-                areaGo.name = areaKey;
-                areaGo.transform.parent = transform;
-
-                var area = areaGo.AddComponent<EnvironmentArea>();
-                area.Initialize(areaIndex);
-                areas.Add(areaIndex, area);
-
-                areaTransform = areaGo.transform;
+                areaTransform = CreateArea(areaIndex);
             }
 
             // 创建区域材料节点
@@ -252,6 +264,24 @@ namespace CubeWorldEditor
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// 创建区域节点
+        /// </summary>
+        /// <param name="areaIndex"></param>
+        private Transform CreateArea(int areaIndex)
+        {
+            string areaKey = areaIndex.ToString();
+            GameObject areaGo = new GameObject();
+            areaGo.name = areaKey;
+            areaGo.transform.parent = transform;
+
+            var area = areaGo.AddComponent<EnvironmentArea>();
+            area.Initialize(areaIndex);
+            areas.Add(areaIndex, area);
+
+            return areaGo.transform;
         }
 
         /// <summary>

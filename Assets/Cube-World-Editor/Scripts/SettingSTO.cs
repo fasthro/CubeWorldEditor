@@ -12,6 +12,9 @@ namespace CubeWorldEditor
     [System.Serializable]
     public class SettingSTO : ScriptableObject
     {
+        [Header("编辑器宽")]
+        public int EditorWidth = 450;
+
         [Header("关卡场景保存路径")]
         public string artPath = "Assets/Cube-World-Editor-Art/Levels/Prefabs/";
 

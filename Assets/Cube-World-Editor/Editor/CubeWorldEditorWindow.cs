@@ -58,6 +58,8 @@ namespace CubeWorldEditor
         private GUIContent m_content;
         // GUI color
         private Color m_guiColor;
+        // Style
+        private GUIStyle m_fontStyle;
 
 
         [MenuItem("Cube World/Editor")]
@@ -65,12 +67,12 @@ namespace CubeWorldEditor
         {
             Inst = GetWindow<CubeWorldEditorWindow>(false, "");
             Inst.titleContent.text = "Cube World Editor";
+            Inst.minSize = new Vector2(SettingManager.Inst.Setting.EditorWidth, 100);
         }
 
         private void Initialize()
         {
             if (Inst == null) OpenCubeWorldEditorWindow();
-
             // 关卡
             Environment.Inst.Initialize();
 
@@ -91,6 +93,15 @@ namespace CubeWorldEditor
             m_secondaryGroupId = "";
             m_resGroup = null;
             m_resObject = null;
+        }
+
+        /// <summary>
+        /// 跳转到创建新场景
+        /// </summary>
+
+        private void GoToCreateScene()
+        {
+            EditorSceneManager.NewScene(NewSceneSetup.EmptyScene);
         }
 
         /// <summary>
@@ -137,9 +148,10 @@ namespace CubeWorldEditor
 
         void OnEnable()
         {
-            if (!CheckSceneRuleLegal()) return;
-
-            Initialize();
+            if (CheckSceneRuleLegal())
+            {
+                Initialize();
+            }
 
             // 场景GUI事件
             SceneView.onSceneGUIDelegate -= OnSceneGUI;
@@ -173,8 +185,7 @@ namespace CubeWorldEditor
         /// <param name="mode"></param>
         void OnSceneOpened(UnityEngine.SceneManagement.Scene scene, OpenSceneMode mode)
         {
-            Close();
-            if (CheckSceneRuleLegal()) OpenCubeWorldEditorWindow();
+            if (CheckSceneRuleLegal()) Initialize();
         }
 
         void OnGUI()
@@ -186,13 +197,143 @@ namespace CubeWorldEditor
             if (!CheckSceneRuleLegal())
             {
                 editorEnabled = false;
+                DrawCreate();
+                return;
+            }
 
-                EditorGUILayout.BeginVertical("box");
-                EditorGUILayout.LabelField("Scene Name");
-                m_sceneName = EditorGUILayout.TextField(m_sceneName);
+            EditorGUILayout.BeginVertical("box");
+
+            // 编辑模式开关按钮
+            editorEnabled = GUILayout.Toggle(editorEnabled, "Enable Editor", "Button", GUILayout.Height(30));
+
+            // 场景主界面
+            if (editorEnabled) sceneWindow.ShowWindow();
+            else sceneWindow.CloseWindow();
+
+            // 保存场景按钮
+            EditorGUILayout.BeginHorizontal("box");
+
+            // 跳转到创建新场景
+            if (GUILayout.Button("Create Scene", GUILayout.Height(30)))
+            {
+                EditorGUILayout.EndHorizontal();
                 EditorGUILayout.EndVertical();
+                GoToCreateScene();
+                return;
+            }
 
-                if (GUILayout.Button("Create", GUILayout.Height(30)))
+            // 保存场景
+            if (GUILayout.Button("Save Scene", GUILayout.Height(30))) SaveScene();
+
+            // 生成场景配置按钮
+            if (GUILayout.Button("Export Xml", GUILayout.Height(30))) ExportXml();
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.EndVertical();
+
+            // 网格规模尺寸设置
+            EditorGUILayout.BeginVertical("box");
+            EditorGUILayout.LabelField("Template Grid Setting");
+            GUILayout.Space(3);
+            EditorGUILayout.BeginVertical("box");
+            using (new GUILayout.HorizontalScope())
+            {
+                EditorGUILayout.LabelField("Size ", GUILayout.Width(50));
+                m_templateGridSize = EditorGUILayout.Vector2IntField("", m_templateGridSize);
+            }
+
+            // 校正网格模版尺寸
+            CorrectSize(m_templateGridSize);
+            // 设置网格模版尺寸
+            sceneWindow.templateGrid.width = m_templateGridSize.x;
+            sceneWindow.templateGrid.lenght = m_templateGridSize.y;
+
+            // 网格高度设置
+            GUILayout.Space(3);
+            using (new GUILayout.HorizontalScope())
+            {
+                EditorGUILayout.LabelField("Height ", GUILayout.Width(50));
+                GUILayout.Label(sceneWindow.templateGrid.height.ToString());
+            }
+
+            EditorGUILayout.EndVertical();
+            EditorGUILayout.EndVertical();
+
+
+            // 区域
+            EditorGUILayout.BeginVertical("box");
+            using (new GUILayout.HorizontalScope())
+            {
+                EditorGUILayout.LabelField("Area Setting");
+                if (GUILayout.Button("Add Area", GUILayout.Width(80)))
+                {
+                    Environment.Inst.AddArea();
+                    ShowNotification(new GUIContent("add area succeed."));
+                }
+            }
+            EditorGUILayout.BeginVertical("box");
+            using (new GUILayout.HorizontalScope())
+            {
+                for (int i = 0; i < Environment.Inst.GetMaxAreaIndex(); i++)
+                {
+                    var key = i + 1;
+                    if (GUILayout.Toggle(area == key, key.ToString(), GUI.skin.button))
+                    {
+                        area = key;
+                    }
+                }
+            }
+            EditorGUILayout.EndVertical();
+            EditorGUILayout.EndVertical();
+
+            // 材料分组按钮
+            GUILayout.Space(3);
+            EditorGUILayout.BeginHorizontal();
+            FieldInfo[] fields = typeof(MaterialType).GetFields();
+            for (int i = 0; i < fields.Length; i++)
+            {
+                var fieldName = fields[i].Name;
+                if (!fieldName.Equals("value__"))
+                {
+                    var mt = (MaterialType)fields[i].GetValue(fields[i]);
+                    if (GUILayout.Toggle(materialType == mt, m_content = new GUIContent(mt.ToString()), "Button", GUILayout.Height(30)))
+                    {
+                        m_materialType = mt;
+                        m_resGroup = ResManager.Inst.GetResGroupByName(mt.ToString());
+                    }
+                }
+            }
+            EditorGUILayout.EndHorizontal();
+
+            // 资源库预览界面
+            DrawModelView();
+
+            // 场景重绘
+            SceneView.RepaintAll();
+        }
+
+        /// <summary>
+        /// 创建界面
+        /// </summary>
+        private void DrawCreate()
+        {
+            // logo
+            using (new HorizontalCenteredScope())
+            {
+                GUILayout.Box(EUI.GetTextureContent("cubeWorld"), "texture", GUILayout.Width(SettingManager.Inst.Setting.EditorWidth), GUILayout.Height(120));
+            }
+
+            using (new HorizontalCenteredScope())
+            {
+                GUILayout.Box(EUI.GetTextureContent("sceneName"), "texture", GUILayout.Width(SettingManager.Inst.Setting.EditorWidth), GUILayout.Height(48));
+            }
+
+            m_sceneName = EditorGUILayout.TextField(m_sceneName);
+
+            using (new HorizontalCenteredScope())
+            {
+
+                if (GUILayout.Button(EUI.GetTextureContent("createScene"), GUILayout.Width(SettingManager.Inst.Setting.EditorWidth), GUILayout.Height(55)))
                 {
                     if (string.IsNullOrEmpty(m_sceneName))
                     {
@@ -218,68 +359,67 @@ namespace CubeWorldEditor
                         CreateScene();
                     }
                 }
-                return;
             }
-
-            EditorGUILayout.BeginVertical("box");
-
-            // 编辑模式开关按钮
-            editorEnabled = GUILayout.Toggle(editorEnabled, "Enable Editor", "Button", GUILayout.Height(30));
-
-            // 场景主界面
-            if (editorEnabled) sceneWindow.ShowWindow();
-            else sceneWindow.CloseWindow();
-
-            // 保存场景按钮
-            EditorGUILayout.BeginHorizontal("box");
-            if (GUILayout.Button("Save Scene", GUILayout.Height(30))) SaveScene();
-
-            // 生成场景配置按钮
-            if (GUILayout.Button("Export Xml", GUILayout.Height(30))) ExportXml();
-            EditorGUILayout.EndHorizontal();
-
-            EditorGUILayout.EndVertical();
-
-            // 网格规模尺寸设置
-            EditorGUILayout.BeginVertical("box");
-            m_templateGridSize = EditorGUILayout.Vector2IntField("Template Grid Size", m_templateGridSize);
-            // 校正网格模版尺寸
-            CorrectSize(m_templateGridSize);
-            // 设置网格模版尺寸
-            sceneWindow.templateGrid.width = m_templateGridSize.x;
-            sceneWindow.templateGrid.lenght = m_templateGridSize.y;
-
-            EditorGUILayout.EndVertical();
-
-            // 网格高度设置
-            EditorGUILayout.BeginVertical("box");
-            GUILayout.Label("Template Grid Height: " + sceneWindow.templateGrid.height.ToString());
-            EditorGUILayout.EndVertical();
-
-            // 材料分组按钮
-            EditorGUILayout.BeginHorizontal();
-            FieldInfo[] fields = typeof(MaterialType).GetFields();
-            for (int i = 0; i < fields.Length; i++)
+            using (new VerticalCenteredScope())
             {
-                var fieldName = fields[i].Name;
-                if (!fieldName.Equals("value__"))
-                {
-                    var mt = (MaterialType)fields[i].GetValue(fields[i]);
-                    if (GUILayout.Toggle(materialType == mt, m_content = new GUIContent(mt.ToString()), "Button", GUILayout.Height(30)))
-                    {
-                        m_materialType = mt;
-                        m_resGroup = ResManager.Inst.GetResGroupByName(mt.ToString());
-                    }
-                }
+
             }
-            EditorGUILayout.EndHorizontal();
-
-            // 资源库预览界面
-            DrawModelView();
-
-            // 场景重绘
-            SceneView.RepaintAll();
+            using (new HorizontalCenteredScope())
+            {
+                GUILayout.Box(EUI.GetTextureContent("fasthro"), "texture", GUILayout.Width(SettingManager.Inst.Setting.EditorWidth), GUILayout.Height(48));
+            }
         }
+
+        /// <summary>
+        /// 创建关卡
+        /// </summary>
+        private void CreateScene()
+        {
+            if (!Directory.Exists(Utils.GetSceneDirectory(m_sceneName)))
+                Directory.CreateDirectory(Utils.GetSceneDirectory(m_sceneName));
+
+            // 创建空场景
+            EditorSceneManager.NewScene(NewSceneSetup.EmptyScene);
+
+            // 创建网格
+            GameObject templateGo = GameObject.Find(typeof(TemplateGrid).Name);
+            if (templateGo != null)
+            {
+                DestroyImmediate(templateGo);
+            }
+            templateGo = new GameObject();
+            templateGo.layer = LayerMask.NameToLayer(typeof(TemplateGrid).Name);
+            templateGo.name = typeof(TemplateGrid).Name;
+            TemplateGrid templateGrid = templateGo.AddComponent<TemplateGrid>();
+            templateGrid.width = 20;
+            templateGrid.lenght = 20;
+            templateGrid.height = 0;
+
+            // environment
+            GameObject environmentGo = GameObject.Find(typeof(Environment).Name);
+            if (environmentGo != null)
+            {
+                DestroyImmediate(environmentGo);
+            }
+            environmentGo = new GameObject();
+            environmentGo.name = typeof(Environment).Name;
+            var environment = environmentGo.AddComponent<Environment>();
+            environment.sceneName = Utils.ToUpperFirstChar(m_sceneName);
+
+            // navmesh
+            GameObject navmeshGo = new GameObject();
+            navmeshGo.transform.position = Vector3.zero;
+            navmeshGo.name = "Navmesh";
+
+            var navmesh = navmeshGo.AddComponent<NavMeshSurface>();
+            navmesh.collectObjects = CollectObjects.All;
+            //navmesh.layerMask = 1 << LayerMask.NameToLayer(LevelFunctionType.Ground.ToString());
+
+            EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene(), Utils.GetScenePath(m_sceneName));
+
+            Initialize();
+        }
+
 
         /// <summary>
         /// 画资源库物体预览展示
@@ -313,7 +453,7 @@ namespace CubeWorldEditor
 
             m_modelViewHorizontalCounter = 0;
 
-            m_modelViewColumn = (int)(Inst.position.width / 200f);
+            m_modelViewColumn = (int)(Inst.position.width / 200);
             if (m_modelViewColumn <= 1)
             {
                 m_modelViewColumn = 1;
@@ -331,7 +471,8 @@ namespace CubeWorldEditor
                 {
                     classRecords[_class.id] = true;
                 }
-                classRecords[_class.id] = GUILayout.Toggle(classRecords[_class.id], m_content = new GUIContent(_class.GetClassName()), "Box", GUILayout.Width(Inst.position.width - 35), GUILayout.Height(20));
+
+                classRecords[_class.id] = GUILayout.Toggle(classRecords[_class.id], m_content = new GUIContent(_class.GetClassName()), GUI.skin.button, GUILayout.Width(Inst.position.width - 20), GUILayout.Height(20));
 
                 if (classRecords[_class.id])
                 {
@@ -392,58 +533,6 @@ namespace CubeWorldEditor
 
             EditorGUILayout.EndVertical();
             EditorGUILayout.EndScrollView();
-        }
-
-        /// <summary>
-        /// 创建关卡
-        /// </summary>
-        private void CreateScene()
-        {
-            if (!Directory.Exists(Utils.GetSceneDirectory(m_sceneName)))
-                Directory.CreateDirectory(Utils.GetSceneDirectory(m_sceneName));
-
-            // 创建空场景
-            EditorSceneManager.NewScene(NewSceneSetup.EmptyScene);
-
-            // 创建网格
-            GameObject templateGo = GameObject.Find(typeof(TemplateGrid).Name);
-            if (templateGo != null)
-            {
-                DestroyImmediate(templateGo);
-            }
-            templateGo = new GameObject();
-            templateGo.layer = LayerMask.NameToLayer(typeof(TemplateGrid).Name);
-            templateGo.name = typeof(TemplateGrid).Name;
-            TemplateGrid templateGrid = templateGo.AddComponent<TemplateGrid>();
-            templateGrid.width = 20;
-            templateGrid.lenght = 20;
-            templateGrid.height = 0;
-
-            // environment
-            GameObject environmentGo = GameObject.Find(typeof(Environment).Name);
-            if (environmentGo != null)
-            {
-                DestroyImmediate(environmentGo);
-            }
-            environmentGo = new GameObject();
-            environmentGo.name = typeof(Environment).Name;
-            var environment = environmentGo.AddComponent<Environment>();
-            environment.sceneName = Utils.ToUpperFirstChar(m_sceneName);
-
-            // navmesh
-            GameObject navmeshGo = new GameObject();
-            navmeshGo.transform.position = Vector3.zero;
-            navmeshGo.name = "Navmesh";
-
-            var navmesh = navmeshGo.AddComponent<NavMeshSurface>();
-            navmesh.collectObjects = CollectObjects.All;
-            //navmesh.layerMask = 1 << LayerMask.NameToLayer(LevelFunctionType.Ground.ToString());
-
-            EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene(), Utils.GetScenePath(m_sceneName));
-
-            Inst.Close();
-
-            OpenCubeWorldEditorWindow();
         }
 
         // 设置视图选中资源
