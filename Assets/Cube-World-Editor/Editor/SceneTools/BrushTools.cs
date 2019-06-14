@@ -86,6 +86,8 @@ namespace CubeWorldEditor
             m_grid.positionOffset = m_positionOffset;
             m_grid.angle = Vector3.zero;
             m_grid.angleOffset = m_angleOffset;
+            m_grid.scale = m_grid.transform.localScale;
+            m_grid.scaleOffset = Vector3.zero;
 
             m_grid.transform.position = mousePosition + m_anchorOffset + m_positionOffset;
             m_grid.transform.localEulerAngles = m_angleOffset;

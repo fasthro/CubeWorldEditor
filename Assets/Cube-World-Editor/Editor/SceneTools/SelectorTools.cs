@@ -16,7 +16,6 @@ namespace CubeWorldEditor
     {
         // 选择器状态
         private SelectorToolsState m_selectState;
-        private SelectorToolsState m_lastSelectState;
 
         // Grid
         private Grid m_selectGrid;
@@ -29,7 +28,6 @@ namespace CubeWorldEditor
         {
             m_selectGrid = null;
             m_selectState = SelectorToolsState.Unselected;
-            m_lastSelectState = SelectorToolsState.Selected;
         }
 
         protected override void OnOpen()
@@ -52,8 +50,6 @@ namespace CubeWorldEditor
             // 选择提示框
             if (m_selectState == SelectorToolsState.Selected)
             {
-                Selection.activeGameObject = m_selectGrid.gameObject;
-
                 var label = string.Format("Position  : {0}\nRotation : {1}", m_selectGrid.transform.position.ToString(), m_selectGrid.transform.localEulerAngles.ToString());
                 DrawGizmoPosition(m_selectGrid.transform.position + Vector3.up, m_selectGrid.transform.rotation, label);
             }
@@ -71,14 +67,9 @@ namespace CubeWorldEditor
             {
                 if (m_selectGrid != null)
                     Selection.activeGameObject = null;
-
+                
                 m_selectGrid = Environment.Inst.GetGrid(mousePosition, CubeWorldEditorWindow.Inst.area);
                 m_selectState = m_selectGrid != null ? SelectorToolsState.Selected : SelectorToolsState.Unselected;
-            }
-
-            if (m_lastSelectState != m_selectState)
-            {
-                m_lastSelectState = m_selectState;
                 if (toolsEventHandler != null) toolsEventHandler(m_selectGrid);
             }
         }

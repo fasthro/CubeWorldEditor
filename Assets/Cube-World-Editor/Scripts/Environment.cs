@@ -80,6 +80,8 @@ namespace CubeWorldEditor
             grid.angle = brushGrid.angle;
             grid.angleOffset = brushGrid.angleOffset;
             grid.materialType = resObject.materialType;
+            grid.scale = brushGrid.scale;
+            grid.scaleOffset = brushGrid.scaleOffset;
             grid.Initialize();
 
             var addSucceed = AddGrid(brushGrid.position, areaIndex, grid);

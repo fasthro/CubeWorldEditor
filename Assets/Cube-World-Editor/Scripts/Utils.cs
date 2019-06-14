@@ -162,7 +162,7 @@ namespace CubeWorldEditor
         /// <returns></returns>
         public static string GetSceneDataPath(string sceneName, bool absolute = true)
         {
-            return Path.Combine(GetSceneDirectory(sceneName, absolute), "Map.xml");
+            return Path.Combine(GetSceneDirectory(sceneName, absolute), sceneName + ".xml");
         }
 
         /// <summary>

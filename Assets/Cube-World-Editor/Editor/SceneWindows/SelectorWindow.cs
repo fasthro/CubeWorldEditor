@@ -16,14 +16,23 @@ namespace CubeWorldEditor
         private Vector3 m_positionOffset;
         // 角度偏移
         private Vector3 m_angleOffset;
+        // 缩放偏移
+        private Vector3 m_scaleOffset;
 
         // 选择器工具
         private SelectorTools m_selectorTools;
 
-        private int selectedSnapping;
-        private float snapValue;
-        private readonly string[] Options = { "Custom", "0.25", "0.5", "1.0" };
-        private readonly float[] OptionValues = { 0.0f, 0.25f, 0.5f, 1.0f };
+        private int m_positionSelectedSnapping;
+        private float m_positionSnapValue;
+        private readonly string[] m_positionOptions = { "Custom", "0.25", "0.5", "1.0" };
+        private readonly float[] m_positionOptionValues = { 0.0f, 0.25f, 0.5f, 1.0f };
+
+        private int m_scaleSelectedSnapping;
+        private float m_scaleSnapValue;
+        private readonly string[] m_scaleOptions = { "Custom", "1", "2", "5" };
+        private readonly float[] m_scaleOptionValues = { 0f, 1f, 2f, 5f };
+
+
         private readonly Color backgroundRed = new Color(1.0f, 0.467f, 0.465f);
         private readonly Color backgroundGreen = new Color(0.467f, 1.0f, 0.514f);
         private readonly Color backgroundBlue = new Color(0.467f, 0.67f, 1.0f);
@@ -34,16 +43,18 @@ namespace CubeWorldEditor
         {
             title = "Selecter Setting";
             w = 330;
-            h = 175;
+            h = 225;
             windowId = EUI.GetWindowId();
 
-            selectedSnapping = 1;
+            m_positionSelectedSnapping = 1;
+            m_scaleSelectedSnapping = 1;
 
             m_selectorTools = CubeWorldEditorWindow.Inst.sceneWindow.selectorTools;
             if (m_selectorTools.selectGrid != null)
             {
                 m_positionOffset = m_selectorTools.selectGrid.positionOffset;
                 m_angleOffset = m_selectorTools.selectGrid.angleOffset;
+                m_scaleOffset = m_selectorTools.selectGrid.scaleOffset;
             }
         }
 
@@ -86,14 +97,14 @@ namespace CubeWorldEditor
             }
 
             GUILayout.Label("-Position");
-            selectedSnapping = GUILayout.SelectionGrid(selectedSnapping, Options, Options.Length, EditorStyles.miniButton);
-            if (selectedSnapping < OptionValues.Length && selectedSnapping > 0)
+            m_positionSelectedSnapping = GUILayout.SelectionGrid(m_positionSelectedSnapping, m_positionOptions, m_positionOptions.Length, EditorStyles.miniButton);
+            if (m_positionSelectedSnapping < m_positionOptionValues.Length && m_positionSelectedSnapping > 0)
             {
-                snapValue = OptionValues[selectedSnapping];
+                m_positionSnapValue = m_positionOptionValues[m_positionSelectedSnapping];
             }
             else
             {
-                snapValue = EditorGUILayout.FloatField("Custom Value", snapValue);
+                m_positionSnapValue = EditorGUILayout.FloatField("Custom Value", m_positionSnapValue);
             }
 
             using (new HorizontalCenteredScope())
@@ -102,22 +113,52 @@ namespace CubeWorldEditor
                 GUI.backgroundColor = backgroundRed; ;
 
                 if (GUILayout.Button(EUI.GetTextContent("+X"), GUILayout.Width(50)))
-                    m_positionOffset.x += snapValue;
+                    m_positionOffset.x += m_positionSnapValue;
 
                 if (GUILayout.Button(EUI.GetTextContent("-X"), GUILayout.Width(50)))
-                    m_positionOffset.x -= snapValue;
+                    m_positionOffset.x -= m_positionSnapValue;
 
                 GUI.backgroundColor = backgroundGreen;
                 if (GUILayout.Button(EUI.GetTextContent("+Y"), GUILayout.Width(50)))
-                    m_positionOffset.y += snapValue;
+                    m_positionOffset.y += m_positionSnapValue;
                 if (GUILayout.Button(EUI.GetTextContent("-Y"), GUILayout.Width(50)))
-                    m_positionOffset.y -= snapValue;
+                    m_positionOffset.y -= m_positionSnapValue;
 
                 GUI.backgroundColor = backgroundBlue;
                 if (GUILayout.Button(EUI.GetTextContent("+Z"), GUILayout.Width(50)))
-                    m_positionOffset.z += snapValue;
+                    m_positionOffset.z += m_positionSnapValue;
                 if (GUILayout.Button(EUI.GetTextContent("-Z"), GUILayout.Width(50)))
-                    m_positionOffset.z -= snapValue;
+                    m_positionOffset.z -= m_positionSnapValue;
+
+                GUI.backgroundColor = originalColour;
+            }
+
+            GUILayout.Label("-Scale");
+            m_scaleSelectedSnapping = GUILayout.SelectionGrid(m_scaleSelectedSnapping, m_scaleOptions, m_scaleOptions.Length, EditorStyles.miniButton);
+            if (m_scaleSelectedSnapping < m_scaleOptionValues.Length && m_scaleSelectedSnapping > 0)
+            {
+                m_scaleSnapValue = m_scaleOptionValues[m_scaleSelectedSnapping];
+            }
+            else
+            {
+                m_scaleSnapValue = EditorGUILayout.FloatField("Custom Value", m_scaleSnapValue);
+            }
+
+            using (new HorizontalCenteredScope())
+            {
+                var originalColour = GUI.backgroundColor;
+                GUI.backgroundColor = backgroundRed; ;
+
+                if (GUILayout.Button(EUI.GetTextContent("X"), GUILayout.Width(103)))
+                    m_scaleOffset.x = m_scaleSnapValue;
+
+                GUI.backgroundColor = backgroundGreen;
+                if (GUILayout.Button(EUI.GetTextContent("Y"), GUILayout.Width(103)))
+                    m_scaleOffset.y = m_scaleSnapValue;
+
+                GUI.backgroundColor = backgroundBlue;
+                if (GUILayout.Button(EUI.GetTextContent("Z"), GUILayout.Width(103)))
+                    m_scaleOffset.z = m_scaleSnapValue;
 
                 GUI.backgroundColor = originalColour;
             }
@@ -125,6 +166,7 @@ namespace CubeWorldEditor
             // 设置笔刷
             m_selectorTools.selectGrid.positionOffset = m_positionOffset;
             m_selectorTools.selectGrid.angleOffset = m_angleOffset;
+            m_selectorTools.selectGrid.scaleOffset = m_scaleOffset;
 
             m_selectorTools.selectGrid.Refresh();
         }

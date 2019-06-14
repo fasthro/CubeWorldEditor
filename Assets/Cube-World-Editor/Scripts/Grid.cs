@@ -25,18 +25,23 @@ namespace CubeWorldEditor
         public Vector3 angle;
         // 角度偏移
         public Vector3 angleOffset;
+        // 缩放
+        public Vector3 scale;
+        // 缩放偏移
+        public Vector3 scaleOffset;
         // 材料类型
         public MaterialType materialType;
 
         public void Initialize()
         {
-
+            
         }
 
         public void Refresh()
         {
             transform.position = position + positionOffset + SettingManager.Inst.Setting.cubeAnchorOffset;
             transform.localEulerAngles = angle + angleOffset;
+            transform.localScale = scale + scaleOffset;
         }
     }
 }

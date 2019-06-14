@@ -184,6 +184,8 @@ namespace CubeWorldEditor
             if (stt == SceneToolsType.Erase) eraseTools.Open();
 
             if (switchToolsEventHandler != null) switchToolsEventHandler(stt);
+
+            if (stt == SceneToolsType.None) Selection.activeGameObject = null;
         }
 
         public void OnSceneGUI(SceneView sceneView)
@@ -299,7 +301,11 @@ namespace CubeWorldEditor
         // 选择器工具事件
         private void OnSelectorToolsEventHandler(Grid grid)
         {
-
+            if (grid != null)
+            {
+                Selection.activeGameObject = grid.gameObject;
+                selectorWindow.RestartWindow();
+            }
         }
 
         // 笔刷工具事件
